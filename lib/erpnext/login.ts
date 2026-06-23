@@ -1,5 +1,5 @@
-import path from "node:path";
-import { DEFAULT_ERPNEXT_URL } from "./constants";
+import { DEFAULT_ERPNEXT_URL, erpnextMcpUrl } from "./constants";
+import type { SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 const SERVER_DEFAULT_ERP_URL = process.env.ERPNEXT_URL?.trim() || DEFAULT_ERPNEXT_URL;
 
@@ -160,23 +160,18 @@ export async function verifyErpnextOtp(url: string, tmpId: string, otp: string):
   return finishSession(baseUrl, result.cookies);
 }
 
-export function erpnextMcpServerPath() {
-  const fromEnv = process.env.ERPNEXT_MCP_SERVER_PATH?.trim();
-  if (fromEnv) return fromEnv;
-  return path.join(process.cwd(), "mcp_erpNext", "index.js");
-}
-
-/** MCP env with inline SID — stored in localStorage, no credentials file. */
-export function buildErpnextMcpEntry(session: { url: string; sid: string; csrfToken?: string }) {
-  const env: Record<string, string> = {
-    ERPNEXT_URL: session.url,
-    ERPNEXT_SID: session.sid,
-  };
-  if (session.csrfToken) env.ERPNEXT_CSRF_TOKEN = session.csrfToken;
+/** HTTP MCP entry — SID as Bearer token; ERP site URL lives on the MCP server env. */
+export function buildErpnextMcpEntry(session: { sid: string }): SdkMcpServerConfig {
+  const url = erpnextMcpUrl();
+  if (!url) {
+    throw new Error("ERPNEXT_MCP_URL is not configured");
+  }
 
   return {
-    command: process.env.MCP_RUNTIME?.trim() || "bun",
-    args: [erpnextMcpServerPath().replace(/\\/g, "/")],
-    env,
+    type: "http",
+    url,
+    headers: {
+      Authorization: `Bearer ${session.sid}`,
+    },
   };
 }

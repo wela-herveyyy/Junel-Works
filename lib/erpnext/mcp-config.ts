@@ -1,6 +1,6 @@
 import { parseMcpServersJson } from "@/lib/junel/mcp";
 import { buildErpnextMcpEntry } from "@/lib/erpnext/login";
-import type { ErpnextLink, JunelMcpState, JunelStorage } from "@/lib/junel/storage/types";
+import type { ErpnextLink, JunelMcpState, JunelStorage, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 export type ErpnextSessionInput = {
   url: string;
@@ -14,7 +14,7 @@ export function isErpnextLoggedIn(data: JunelStorage) {
   return Boolean(data.erpnext?.sid && data.mcp.enabledKeys.includes("erpnext"));
 }
 
-export function mergeErpnextMcp(mcp: JunelMcpState, erpnext: ReturnType<typeof buildErpnextMcpEntry>): JunelMcpState {
+export function mergeErpnextMcp(mcp: JunelMcpState, erpnext: SdkMcpServerConfig): JunelMcpState {
   const parsed = parseMcpServersJson(mcp.serversJson);
   const servers = parsed.ok ? { ...parsed.servers } : {};
   servers.erpnext = erpnext;
@@ -24,8 +24,12 @@ export function mergeErpnextMcp(mcp: JunelMcpState, erpnext: ReturnType<typeof b
   };
 }
 
-export function applyErpnextSession(mcp: JunelMcpState, session: ErpnextSessionInput) {
-  const entry = buildErpnextMcpEntry(session);
+export function applyErpnextSession(
+  mcp: JunelMcpState,
+  session: ErpnextSessionInput,
+  mcpEntry?: SdkMcpServerConfig,
+) {
+  const entry = mcpEntry ?? buildErpnextMcpEntry(session);
   return {
     erpnext: {
       url: session.url,
@@ -36,6 +40,20 @@ export function applyErpnextSession(mcp: JunelMcpState, session: ErpnextSessionI
     } satisfies ErpnextLink,
     mcp: mergeErpnextMcp(mcp, entry),
   };
+}
+
+/** Upgrade legacy stdio erpnext entries to remote HTTP when a session SID exists. */
+export function migrateErpnextMcpToHttp(mcp: JunelMcpState, erpnext?: ErpnextLink): JunelMcpState {
+  if (!erpnext?.sid) return mcp;
+  const parsed = parseMcpServersJson(mcp.serversJson);
+  if (!parsed.ok) return mcp;
+  const entry = parsed.servers.erpnext;
+  if (entry && "url" in entry && entry.url) return mcp;
+  try {
+    return mergeErpnextMcp(mcp, buildErpnextMcpEntry({ sid: erpnext.sid }));
+  } catch {
+    return mcp;
+  }
 }
 
 export function clearErpnextSession(data: JunelStorage): JunelStorage {

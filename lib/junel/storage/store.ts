@@ -1,4 +1,5 @@
 import { createDefaultStorage, DEFAULT_MCP_SERVERS_JSON } from "./defaults";
+import { migrateErpnextMcpToHttp } from "@/lib/erpnext/mcp-config";
 import { migrateLegacyMcpServers } from "@/lib/junel/mcp";
 import type { Contact, JunelMcpState, JunelStorage, StoredMcpServer } from "./types";
 
@@ -31,6 +32,8 @@ export function normalizeStorage(partial?: Partial<JunelStorage> & { mcpServers?
   const defaults = createDefaultStorage();
   if (!partial) return defaults;
 
+  const erpnext = partial.erpnext?.sid ? partial.erpnext : undefined;
+
   return {
     version: 1,
     profile: { ...defaults.profile, ...partial.profile },
@@ -38,8 +41,8 @@ export function normalizeStorage(partial?: Partial<JunelStorage> & { mcpServers?
     settings: { ...defaults.settings, ...partial.settings },
     rules: Array.isArray(partial.rules) && partial.rules.length ? partial.rules : defaults.rules,
     skills: Array.isArray(partial.skills) && partial.skills.length ? partial.skills : defaults.skills,
-    mcp: normalizeMcp(partial.mcp, partial.mcpServers),
-    erpnext: partial.erpnext?.sid ? partial.erpnext : undefined,
+    mcp: migrateErpnextMcpToHttp(normalizeMcp(partial.mcp, partial.mcpServers), erpnext),
+    erpnext,
     chat: {
       agentId: partial.chat?.agentId,
       messages: Array.isArray(partial.chat?.messages) ? partial.chat.messages : [],

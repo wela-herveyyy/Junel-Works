@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { applyErpnextSession } from "@/lib/erpnext/mcp-config";
 import { DEFAULT_ERPNEXT_URL } from "@/lib/erpnext/constants";
-import type { JunelMcpState } from "@/lib/junel/storage/types";
+import type { JunelMcpState, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 type ErpnextLoginFormProps = {
   erpUrl?: string;
@@ -22,6 +22,7 @@ type ApiResponse = {
   url?: string;
   sid?: string;
   csrfToken?: string;
+  mcpEntry?: SdkMcpServerConfig;
   verificationRequired?: boolean;
   tmpId?: string;
   verification?: { prompt?: string; method?: string; setup?: boolean };
@@ -74,18 +75,22 @@ export function ErpnextLoginForm({ erpUrl, email, mcp, onSuccess, compact }: Erp
         return;
       }
 
-      if (!res.ok || !data.ok || !data.url || !data.user || !data.sid) {
+      if (!res.ok || !data.ok || !data.url || !data.user || !data.sid || !data.mcpEntry) {
         throw new Error(data.error || "Login failed");
       }
 
       onSuccess(
-        applyErpnextSession(mcp, {
-          url: data.url,
-          email: userEmail,
-          user: data.user,
-          sid: data.sid,
-          csrfToken: data.csrfToken,
-        }),
+        applyErpnextSession(
+          mcp,
+          {
+            url: data.url,
+            email: userEmail,
+            user: data.user,
+            sid: data.sid,
+            csrfToken: data.csrfToken,
+          },
+          data.mcpEntry,
+        ),
       );
       setPassword("");
       resetVerification();
