@@ -56,7 +56,7 @@ export function SettingsConsole() {
 
   return (
     <main className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden custom-scrollbar">
-      <div className="w-full min-w-0 px-margin-mobile md:px-margin-desktop pt-lg pb-2xl max-w-[60rem] mx-auto flex flex-col gap-lg">
+      <div className="w-full min-w-0 px-margin-mobile md:px-margin-desktop pt-lg pb-2xl max-w-240 mx-auto flex flex-col gap-lg">
         <div className="w-full min-w-0">
           <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs">Settings</h2>
           <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">

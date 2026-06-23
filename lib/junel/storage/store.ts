@@ -40,7 +40,7 @@ export function normalizeStorage(partial?: Partial<JunelStorage> & { mcpServers?
     contacts: Array.isArray(partial.contacts) ? partial.contacts.map(normalizeContact) : defaults.contacts,
     settings: { ...defaults.settings, ...partial.settings },
     rules: Array.isArray(partial.rules) && partial.rules.length ? partial.rules : defaults.rules,
-    skills: Array.isArray(partial.skills) && partial.skills.length ? partial.skills : defaults.skills,
+    skills: Array.isArray(partial.skills) ? partial.skills : defaults.skills,
     mcp: migrateErpnextMcpToHttp(normalizeMcp(partial.mcp, partial.mcpServers), erpnext),
     erpnext,
     chat: {

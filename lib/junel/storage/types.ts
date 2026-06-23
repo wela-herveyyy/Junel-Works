@@ -43,6 +43,10 @@ export type JunelSkill = {
   description: string;
   category?: string;
   enabled: boolean;
+  /** Full SKILL.md body — injected into agent context when enabled */
+  content?: string;
+  /** Slug from `.cursor/skills/<id>/` */
+  templateId?: string;
 };
 
 export type ErpnextLink = {

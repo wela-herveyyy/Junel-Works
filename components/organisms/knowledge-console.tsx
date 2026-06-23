@@ -8,6 +8,7 @@ import { RuleForm } from "@/components/molecules/rule-form";
 import { RuleRow } from "@/components/molecules/rule-row";
 import { SearchField } from "@/components/molecules/search-field";
 import { SkillRow } from "@/components/molecules/skill-row";
+import { SkillTemplateGallery } from "@/components/molecules/skill-template-gallery";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import type { JunelRule } from "@/lib/junel/storage/types";
 
@@ -119,15 +120,30 @@ export function KnowledgeConsole() {
           <SetupSection
             icon="extension"
             title="Skills"
-            description="Ready-made abilities you can turn on or off."
+            description="Cursor-style SKILL.md templates from .cursor/skills — toggle on to inject full instructions into every chat."
           >
-            {skills.map((skill) => (
-              <SkillRow
-                key={skill.id}
-                {...skill}
-                onToggle={(enabled) => persist((prev) => ({ ...prev, skills: prev.skills.map((item) => (item.id === skill.id ? { ...item, enabled } : item)) }))}
-              />
-            ))}
+            {skills.length === 0 ? (
+              <p className="font-body-sm text-body-sm text-on-surface-variant p-md">No skills installed yet. Add a template below.</p>
+            ) : (
+              skills.map((skill) => (
+                <SkillRow
+                  key={skill.id}
+                  {...skill}
+                  onToggle={(enabled) => persist((prev) => ({ ...prev, skills: prev.skills.map((item) => (item.id === skill.id ? { ...item, enabled } : item)) }))}
+                />
+              ))
+            )}
+          </SetupSection>
+
+          <SetupSection
+            icon="library_books"
+            title="Skill Templates"
+            description="ERPNext MCP presets that work in Junel (tasks, leave, comments)."
+          >
+            <SkillTemplateGallery
+              skills={data.skills}
+              onInstall={(nextSkills) => persist((prev) => ({ ...prev, skills: nextSkills }))}
+            />
           </SetupSection>
 
           <SetupSection

@@ -7,10 +7,11 @@ type SkillRowProps = {
   description: string;
   category?: string;
   enabled?: boolean;
+  templateId?: string;
   onToggle?: (enabled: boolean) => void;
 };
 
-export function SkillRow({ name, description, category, enabled = false, onToggle }: SkillRowProps) {
+export function SkillRow({ name, description, category, enabled = false, templateId, onToggle }: SkillRowProps) {
   return (
     <div className="flex items-center justify-between gap-md p-md border-b-4 border-black/10 last:border-0 hover:bg-surface-container-low transition-colors">
       <div className="flex items-center gap-md min-w-0">
@@ -20,6 +21,7 @@ export function SkillRow({ name, description, category, enabled = false, onToggl
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-sm mb-xs">
             <h4 className="font-body-md text-body-md text-on-surface">{name}</h4>
+            {templateId ? <Badge>Template</Badge> : null}
             {category ? <Badge>{category}</Badge> : null}
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant">{description}</p>

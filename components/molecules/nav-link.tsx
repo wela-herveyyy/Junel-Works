@@ -5,30 +5,45 @@ import { cn } from "@/lib/utils/cn";
 type NavLinkProps = {
   href: string;
   label: string;
+  mobileLabel?: string;
   icon: string;
   active?: boolean;
   mobile?: boolean;
+  collapsed?: boolean;
 };
 
-export function NavLink({ href, label, icon, active, mobile }: NavLinkProps) {
+export function NavLink({ href, label, mobileLabel, icon, active, mobile, collapsed }: NavLinkProps) {
+  const mobileText = mobileLabel?.trim();
+
   if (mobile) {
     return (
       <Link
         href={href}
+        aria-current={active ? "page" : undefined}
+        aria-label={mobileText}
         className={cn(
-          "flex flex-col items-center justify-center w-16 h-full",
+          "flex flex-1 flex-col items-center justify-center gap-1 min-w-0 px-0.5 py-0.5 transition-transform",
           active ? "text-secondary" : "text-on-surface-variant",
         )}
       >
-        <div
+        <span
           className={cn(
-            "px-sm py-xs rounded-xl mb-1 nb-border",
-            active ? "bg-secondary-container text-on-secondary-container nb-shadow-sm" : "bg-transparent border-transparent",
+            "flex h-10 w-10 items-center justify-center rounded-lg transition-[transform,box-shadow,background-color]",
+            active
+              ? "bg-secondary-container text-on-secondary-container nb-border nb-shadow-sm nb-press-sm"
+              : "nb-border border-transparent",
           )}
         >
-          <Icon name={icon} />
-        </div>
-        <span className={cn("font-label-bold text-[11px]", active && "text-secondary font-bold")}>{label}</span>
+          <Icon name={icon} size={22} filled={active} />
+        </span>
+        <span
+          className={cn(
+            "max-w-full truncate font-label-bold text-[9px] leading-tight tracking-tight px-0.5",
+            active ? "text-secondary" : "text-on-surface-variant",
+          )}
+        >
+          {mobileText}
+        </span>
       </Link>
     );
   }
@@ -36,15 +51,18 @@ export function NavLink({ href, label, icon, active, mobile }: NavLinkProps) {
   return (
     <Link
       href={href}
+      title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
       className={cn(
-        "flex items-center gap-sm rounded-lg px-md py-sm font-label-bold text-label-bold transition-all",
+        "flex items-center rounded-lg py-sm font-label-bold text-label-bold transition-all",
+        collapsed ? "justify-center px-sm" : "gap-sm px-md",
         active
           ? "bg-secondary-container text-on-secondary-container nb-border nb-shadow-sm"
           : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface nb-border border-transparent hover:border-black/20",
       )}
     >
       <Icon name={icon} />
-      {label}
+      {!collapsed ? label : null}
     </Link>
   );
 }

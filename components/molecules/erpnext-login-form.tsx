@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { applyErpnextSession } from "@/lib/erpnext/mcp-config";
 import { DEFAULT_ERPNEXT_URL } from "@/lib/erpnext/constants";
+import { profileEmailFromErp } from "@/lib/junel/profile";
 import type { JunelMcpState, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 type ErpnextLoginFormProps = {

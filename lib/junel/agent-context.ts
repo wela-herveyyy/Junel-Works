@@ -59,10 +59,14 @@ export function buildAgentContext(
 
   const enabledSkills = skills.filter((skill) => skill.enabled);
   if (enabledSkills.length) {
-    parts.push(
-      "These skills are enabled for the user:",
-      ...enabledSkills.map((skill) => `- ${skill.name}: ${skill.description}`),
-    );
+    parts.push("These Cursor-style skills are enabled — follow their instructions:");
+    for (const skill of enabledSkills) {
+      if (skill.content?.trim()) {
+        parts.push(`### Skill: ${skill.name}\n${skill.description}\n\n${skill.content.trim()}`);
+      } else {
+        parts.push(`- ${skill.name}: ${skill.description}`);
+      }
+    }
   }
 
   if (settings.personality) {
