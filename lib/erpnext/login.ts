@@ -161,8 +161,7 @@ export async function verifyErpnextOtp(url: string, tmpId: string, otp: string):
 
 export function erpnextMcpServerPath() {
   return (
-    process.env.ERPNEXT_MCP_SERVER_PATH?.trim() ||
-    "C:/Users/hmapa/Documents/PROJECTS/MCPs/erpnext-mcp-server/build/index.js"
+    "/mcp_erpNext/index.js"
   );
 }
 

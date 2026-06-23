@@ -1,0 +1,48 @@
+import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { CREDENTIAL_ENV_KEYS } from "../constants.js";
+const SESSION_KEYS = ["ERPNEXT_SID", "ERPNEXT_CSRF_TOKEN", "ERPNEXT_COOKIE"];
+export async function loadCredentialsIntoEnv(options = {}) {
+    const credentialsPath = process.env.ERPNEXT_CREDENTIALS_FILE ||
+        join(homedir(), ".erpnext-mcp", "credentials.json");
+    try {
+        const raw = await readFile(credentialsPath, "utf8");
+        const data = JSON.parse(raw);
+        for (const key of CREDENTIAL_ENV_KEYS) {
+            const value = data[key];
+            if (typeof value !== "string" || !value) {
+                continue;
+            }
+            const isSessionKey = SESSION_KEYS.includes(key);
+            if (options.refreshSession && isSessionKey) {
+                process.env[key] = value;
+            }
+            else if (!process.env[key]) {
+                process.env[key] = value;
+            }
+        }
+        return credentialsPath;
+    }
+    catch {
+        return null;
+    }
+}
+export function detectAuthMethod() {
+    const apiKey = process.env.ERPNEXT_API_KEY;
+    const apiSecret = process.env.ERPNEXT_API_SECRET;
+    if (apiKey && apiSecret) {
+        return "api_key";
+    }
+    if (process.env.ERPNEXT_SID) {
+        return "sid";
+    }
+    if (process.env.ERPNEXT_COOKIE) {
+        return "cookie";
+    }
+    if ((process.env.ERPNEXT_USERNAME || process.env.ERPNEXT_USER) &&
+        (process.env.ERPNEXT_PASSWORD || process.env.ERPNEXT_PWD)) {
+        return "password";
+    }
+    return "none";
+}
