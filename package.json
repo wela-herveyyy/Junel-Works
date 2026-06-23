@@ -10,6 +10,7 @@
     "agent": "node scripts/agent.mjs"
   },
   "dependencies": {
+    "@connectrpc/connect-node": "^1.7.0",
     "@cursor/sdk": "^1.0.19",
     "next": "16.2.9",
     "react": "19.2.4",
