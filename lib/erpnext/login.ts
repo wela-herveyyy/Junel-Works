@@ -1,3 +1,4 @@
+import path from "node:path";
 import { DEFAULT_ERPNEXT_URL } from "./constants";
 
 const SERVER_DEFAULT_ERP_URL = process.env.ERPNEXT_URL?.trim() || DEFAULT_ERPNEXT_URL;
@@ -160,9 +161,9 @@ export async function verifyErpnextOtp(url: string, tmpId: string, otp: string):
 }
 
 export function erpnextMcpServerPath() {
-  return (
-    "/mcp_erpNext/index.js"
-  );
+  const fromEnv = process.env.ERPNEXT_MCP_SERVER_PATH?.trim();
+  if (fromEnv) return fromEnv;
+  return path.join(process.cwd(), "mcp_erpNext", "index.js");
 }
 
 /** MCP env with inline SID — stored in localStorage, no credentials file. */
