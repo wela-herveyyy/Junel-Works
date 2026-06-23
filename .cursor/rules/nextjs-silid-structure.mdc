@@ -1,0 +1,42 @@
+---
+description: Silid Next.js 16 monolith — folder roles, read/write flows, and hard rules
+alwaysApply: true
+---
+
+# Silid Next.js structure
+
+If `docs/PROJECT-STRUCTURE.md` exists, read it first. When unsure about Next.js 16 APIs, read `node_modules/next/dist/docs/` (this stack differs from older Next.js).
+
+**Stack:** Next.js 16 App Router · React 19 · Tailwind 4 · NextAuth v5 (`auth.ts`) · MySQL + Drizzle · Bun · `proxy.ts` (not middleware) for `/dashboard/*`
+
+## Where code goes
+
+| Path | Role |
+| ---- | ---- |
+| `app/dashboard/<feature>/queries.ts` | Server reads + `requireDashboardAccess()` |
+| `app/dashboard/<feature>/actions.ts` | Server writes (`"use server"`) |
+| `app/actions.ts` | Auth-guarded `createXAction()` factories |
+| `db/usecase/` → `service/` → `controller/` → `api-modules/` | DB layers (never from pages) |
+| `components/ui/` · `molecules/` · `organisms/` | shadcn primitives → page sections |
+
+## Decision tree
+
+- Static UI → Server Component `page.tsx`
+- Forms/hooks/events → `"use client"` components
+- Read data → `queries.ts` (+ optional `cached-actions.ts`)
+- Write data → `actions.ts` with validation + `revalidatePath`
+- Touch DB → usecase → service → controller → `createXModule()`
+
+## Hard rules
+
+1. Never import usecases from pages/components — use `createXModule()` or `createXAction()`.
+2. `await searchParams` in pages/layouts (it is a Promise in Next.js 16).
+3. `requireDashboardAccess()` in queries; owner-only → `requireOwnerAccess()`.
+4. Mutations return `{ success, message }`.
+5. Client mutations: `useTransition` + server action.
+6. Prefer Server Actions + queries over new REST routes for dashboard UI.
+7. Match existing naming in the domain you touch (`get<Entities>()`, `create<Domain>Module()`, `<verb><Entity>Action()`).
+
+## New feature checklist
+
+Types in `lib/types/` → DB layers → `createXAction()` in `app/actions.ts` → `page.tsx` + `queries.ts` + `actions.ts` → organism if interactive → nav in `admin-shell.tsx` if new section.
