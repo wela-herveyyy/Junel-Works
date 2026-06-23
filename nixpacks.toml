@@ -1,0 +1,12 @@
+# Coolify / Nixpacks — use bun and install all deps needed for `next build`
+[variables]
+NPM_CONFIG_PRODUCTION = "false"
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["bun run build"]
+
+[start]
+cmd = "bun run start"

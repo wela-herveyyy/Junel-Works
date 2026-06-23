@@ -175,7 +175,7 @@ export function buildErpnextMcpEntry(session: { url: string; sid: string; csrfTo
   if (session.csrfToken) env.ERPNEXT_CSRF_TOKEN = session.csrfToken;
 
   return {
-    command: "node",
+    command: process.env.MCP_RUNTIME?.trim() || "bun",
     args: [erpnextMcpServerPath().replace(/\\/g, "/")],
     env,
   };
