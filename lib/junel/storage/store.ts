@@ -1,6 +1,6 @@
 import { createDefaultStorage, DEFAULT_MCP_SERVERS_JSON } from "./defaults";
 import { migrateErpnextMcpToHttp } from "@/lib/erpnext/mcp-config";
-import { syncProfileFromErpLogin } from "@/lib/junel/profile";
+import { ensureProfileIdentity, syncProfileFromErpLogin } from "@/lib/junel/profile";
 import { migrateLegacyMcpServers } from "@/lib/junel/mcp";
 import type { Contact, JunelMcpState, JunelStorage, StoredMcpServer } from "./types";
 
@@ -36,7 +36,7 @@ export function normalizeStorage(partial?: Partial<JunelStorage> & { mcpServers?
   const erpnext = partial.erpnext?.sid ? partial.erpnext : undefined;
   const baseProfile = { ...defaults.profile, ...partial.profile };
   const profile = erpnext
-    ? syncProfileFromErpLogin(baseProfile, erpnext)
+    ? ensureProfileIdentity(syncProfileFromErpLogin(baseProfile, erpnext), erpnext)
     : baseProfile;
 
   return {

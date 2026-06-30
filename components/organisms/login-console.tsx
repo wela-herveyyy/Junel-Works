@@ -6,14 +6,15 @@ import { ErpnextLoginForm } from "@/components/molecules/erpnext-login-form";
 import { Icon } from "@/components/ui/icon";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import { isErpnextLoggedIn } from "@/lib/erpnext/mcp-config";
-import { hasProfileName } from "@/lib/junel/profile";
+import { getErpBranding } from "@/lib/erpnext/branding";
+import { needsProfileSetup } from "@/lib/junel/profile";
 
 export function LoginConsole() {
   const router = useRouter();
   const { data, ready, persist } = useJunelStore();
 
   useEffect(() => {
-    if (ready && data && isErpnextLoggedIn(data) && hasProfileName(data.profile)) {
+    if (ready && data && isErpnextLoggedIn(data) && !needsProfileSetup(data)) {
       router.replace("/");
     }
   }, [ready, data, router]);
@@ -22,9 +23,11 @@ export function LoginConsole() {
     return <p className="font-body-sm text-body-sm text-on-surface-variant">Loading...</p>;
   }
 
-  if (isErpnextLoggedIn(data) && hasProfileName(data.profile)) {
+  if (isErpnextLoggedIn(data) && !needsProfileSetup(data)) {
     return null;
   }
+
+  const branding = getErpBranding(data.erpnext);
 
   return (
     <div className="w-full min-w-[min(100%,20rem)] max-w-112 nb-card p-lg">
@@ -32,7 +35,7 @@ export function LoginConsole() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-primary-container nb-border nb-shadow-sm mb-sm">
           <Icon name="lock" className="text-on-primary-container text-3xl" />
         </div>
-        <h1 className="font-headline-md text-headline-md text-on-surface mb-xs">Sign in to ERPNext</h1>
+        <h1 className="font-headline-md text-headline-md text-on-surface mb-xs">{branding.signInTitle}</h1>
         <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
           Login required before you can chat with Junel.
         </p>

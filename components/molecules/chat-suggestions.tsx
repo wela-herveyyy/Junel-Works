@@ -1,25 +1,38 @@
 "use client";
 
 import { Icon } from "@/components/ui/icon";
+import type { ErpBranding } from "@/lib/erpnext/branding";
 
-const SUGGESTIONS = [
-  { icon: "task_alt", text: "What's on my sprint backlog?" },
-  { icon: "calendar_today", text: "Show my tasks for this week" },
-  { icon: "edit_note", text: "Help me draft a leave request" },
-  { icon: "search", text: "Look up a customer in ERPNext" },
-] as const;
+function buildSuggestions(branding: ErpBranding) {
+  const lookup =
+    branding.isLivro
+      ? "Look up a customer in ERPNext"
+      : branding.schoolRole
+        ? `Look up a record in ${branding.shortName}`
+        : "Look up a record in the system";
+
+  return [
+    { icon: "task_alt", text: "What's on my sprint backlog?" },
+    { icon: "calendar_today", text: "Show my tasks for this week" },
+    { icon: "edit_note", text: "Help me draft a leave request" },
+    { icon: "search", text: lookup },
+  ] as const;
+}
 
 type ChatSuggestionsProps = {
+  branding: ErpBranding;
   onSelect: (text: string) => void;
   disabled?: boolean;
 };
 
-export function ChatSuggestions({ onSelect, disabled }: ChatSuggestionsProps) {
+export function ChatSuggestions({ branding, onSelect, disabled }: ChatSuggestionsProps) {
+  const suggestions = buildSuggestions(branding);
+
   return (
     <div className="flex flex-col gap-md w-full">
       <p className="font-label-bold text-label-bold text-on-surface-variant text-center">Try asking</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
-        {SUGGESTIONS.map((item, index) => (
+        {suggestions.map((item, index) => (
           <button
             key={item.text}
             type="button"

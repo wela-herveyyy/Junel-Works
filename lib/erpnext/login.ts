@@ -1,4 +1,5 @@
 import { DEFAULT_ERPNEXT_URL, erpnextMcpUrl } from "./constants";
+import { fetchErpUserRoles } from "./roles";
 import type { SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 const SERVER_DEFAULT_ERP_URL = process.env.ERPNEXT_URL?.trim() || DEFAULT_ERPNEXT_URL;
@@ -14,6 +15,7 @@ export type ErpnextLoginResult = {
   user: string;
   sid: string;
   csrfToken: string;
+  roles: string[];
 };
 
 export type ErpnextLoginPending = {
@@ -121,7 +123,9 @@ async function finishSession(baseUrl: string, cookies: Record<string, string>): 
     // ponytail: MCP server can refresh CSRF later
   }
 
-  return { url: baseUrl, user, sid: cookies.sid, csrfToken };
+  const roles = await fetchErpUserRoles(baseUrl, cookies.sid, user);
+
+  return { url: baseUrl, user, sid: cookies.sid, csrfToken, roles };
 }
 
 export function defaultErpnextUrl() {

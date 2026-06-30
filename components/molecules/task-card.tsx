@@ -13,6 +13,7 @@ type TaskCardProps = {
   busy?: boolean;
   draft?: string;
   erpUrl?: string;
+  openInLabel?: string;
   onStatus: (status: TaskStatus) => void;
   onFeedback: () => void;
 };
@@ -22,7 +23,7 @@ const STATUS_BUTTONS: { value: TaskStatus; label: string; icon: string; active: 
   { value: "on_hold", label: "On hold", icon: "pause", active: "bg-primary-container text-on-primary-container" },
 ];
 
-export function TaskCard({ task, entry, busy, draft, erpUrl, onStatus, onFeedback }: TaskCardProps) {
+export function TaskCard({ task, entry, busy, draft, erpUrl, openInLabel = "Open in ERPNext", onStatus, onFeedback }: TaskCardProps) {
   const feedback = busy ? draft : entry?.feedback;
   const link = erpUrl
     ? `${erpUrl.replace(/\/$/, "")}/app/${SPRINT_BACKLOGS_ROUTE}/${encodeURIComponent(task.name)}`
@@ -51,7 +52,7 @@ export function TaskCard({ task, entry, busy, draft, erpUrl, onStatus, onFeedbac
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-lg nb-border bg-surface-container-lowest nb-shadow-sm nb-press-sm text-on-surface"
-            title="Open in ERPNext"
+            title={openInLabel}
           >
             <Icon name="open_in_new" size={18} />
           </a>

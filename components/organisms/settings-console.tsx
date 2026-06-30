@@ -9,7 +9,8 @@ import { PersonalityCard } from "@/components/molecules/personality-card";
 import { Switch } from "@/components/ui/switch";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import { PERSONALITIES } from "@/lib/junel/constants";
-import { profileEmailFromErp, syncProfileFromErpLogin } from "@/lib/junel/profile";
+import { getErpBranding } from "@/lib/erpnext/branding";
+import { ensureProfileIdentity, profileEmailFromErp, syncProfileFromErpLogin } from "@/lib/junel/profile";
 import type { Contact, UserProfile } from "@/lib/junel/storage/types";
 
 const fieldClass = "nb-input font-body-md min-h-[56px]";
@@ -22,8 +23,13 @@ export function SettingsConsole() {
 
   useEffect(() => {
     if (!ready || !data?.erpnext) return;
-    const synced = syncProfileFromErpLogin(data.profile, data.erpnext);
-    if (synced.email !== data.profile.email || synced.company !== data.profile.company) {
+    const synced = ensureProfileIdentity(syncProfileFromErpLogin(data.profile, data.erpnext), data.erpnext);
+    if (
+      synced.email !== data.profile.email ||
+      synced.company !== data.profile.company ||
+      synced.displayName !== data.profile.displayName ||
+      synced.nameBoundTo !== data.profile.nameBoundTo
+    ) {
       persist((prev) => ({ ...prev, profile: synced }));
     }
   }, [ready, data, persist]);
@@ -33,6 +39,7 @@ export function SettingsConsole() {
   }
 
   const { profile, contacts, settings, erpnext } = data;
+  const branding = getErpBranding(erpnext);
   const erpEmail = profileEmailFromErp(profile, erpnext);
   const nameMissing = !profile.displayName.trim();
 
@@ -102,14 +109,14 @@ export function SettingsConsole() {
                 Email
                 <span className="nb-chip px-sm py-0.5 text-mono-label bg-tertiary-container text-on-tertiary-container">
                   <Icon name="link" size={12} />
-                  From ERPNext
+                  {branding.emailSourceLabel}
                 </span>
               </span>
               <input
                 type="email"
                 value={erpEmail || profile.email}
                 readOnly
-                title="Synced from your ERPNext login"
+                title={`Synced from your ${branding.shortName} login`}
                 className={`${fieldClass} bg-surface-container text-on-surface-variant cursor-not-allowed`}
               />
             </label>

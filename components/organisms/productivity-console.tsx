@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/molecules/page-header";
 import { TaskCard } from "@/components/molecules/task-card";
 import { Icon } from "@/components/ui/icon";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
+import { getErpBranding } from "@/lib/erpnext/branding";
 import { isErpnextLoggedIn } from "@/lib/erpnext/mcp-config";
 import { streamAgentClient } from "@/lib/agent/run-agent-client";
 import type { ErpTask } from "@/app/api/erpnext/tasks/route";
@@ -137,11 +138,13 @@ export function ProductivityConsole() {
   const working = tasks.filter((t) => data.taskBoard[t.name]?.status === "working").length;
   const onHold = tasks.filter((t) => data.taskBoard[t.name]?.status === "on_hold").length;
 
+  const branding = getErpBranding(erpnext);
+
   return (
     <main className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden custom-scrollbar">
       <PageHeader
         title="Productivity"
-        description="Your Sprint Backlog from ERPNext. Set your working state and get AI feedback."
+        description={`Your Sprint Backlog from ${branding.shortName}. Set your working state and get AI feedback.`}
         actions={
           <button
             type="button"
@@ -194,6 +197,7 @@ export function ProductivityConsole() {
               busy={busy[task.name]}
               draft={drafts[task.name]}
               erpUrl={erpnext?.url}
+              openInLabel={`Open in ${branding.shortName}`}
               onStatus={(status) => setStatus(task.name, status)}
               onFeedback={() => generateFeedback(task)}
             />

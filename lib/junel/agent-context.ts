@@ -1,3 +1,4 @@
+import { erpBrandingContext, getErpBranding } from "@/lib/erpnext/branding";
 import type { Contact, ErpnextLink, JunelRule, JunelSettings, JunelSkill, UserProfile } from "@/lib/junel/storage/types";
 
 const LEGACY_ERP_HOST = "erp.livro.systems";
@@ -19,13 +20,17 @@ export function adaptSkillContentForErp(content: string, erpBaseUrl?: string) {
 function erpSessionContext(erpnext?: ErpnextLink) {
   if (!erpnext?.url?.trim()) return undefined;
   const base = normalizeErpBase(erpnext.url);
-  return [
-    "ERPNext session (authoritative — use for all MCP calls and every ERP link you output):",
+  const branding = getErpBranding(erpnext);
+  const lines = [
+    `${branding.productName} session (authoritative — use for all MCP calls and every link you output):`,
     `- Site: ${base}`,
     `- Logged-in user: ${erpnext.user}`,
     `- Desk link pattern: ${base}/app/{doctype-slug}/{document-name}`,
     `Do not use ${LEGACY_ERP_HOST} or any other host unless it exactly matches Site above.`,
-  ].join("\n");
+  ];
+  const naming = erpBrandingContext(erpnext);
+  if (naming) lines.push(naming);
+  return lines.join("\n");
 }
 
 const PERSONALITY_HINTS: Record<string, string> = {

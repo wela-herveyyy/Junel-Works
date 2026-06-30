@@ -54,6 +54,7 @@ export async function POST(req: Request) {
       url: session.url,
       sid: session.sid,
       csrfToken: session.csrfToken,
+      roles: session.roles,
       mcpEntry,
     });
   } catch (err) {

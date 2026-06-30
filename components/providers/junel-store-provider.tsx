@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { isLivroErpUrl } from "@/lib/erpnext/branding";
 import { mergeMissingTemplateSkills } from "@/lib/junel/skills/merge-templates";
 import type { SkillTemplate } from "@/lib/junel/skills/types";
 import { JUNEL_STORAGE_KEY, clearChatHistory, loadStorage, saveStorage } from "@/lib/junel/storage/store";
@@ -26,6 +27,27 @@ async function fetchSkillTemplates(): Promise<SkillTemplate[]> {
   }
 }
 
+async function maybeRefreshErpRoles(stored: JunelStorage): Promise<JunelStorage> {
+  const erp = stored.erpnext;
+  if (!erp?.sid || erp.roles?.length || isLivroErpUrl(erp.url)) return stored;
+
+  try {
+    const res = await fetch("/api/erpnext/roles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: erp.url, sid: erp.sid, user: erp.user }),
+    });
+    if (!res.ok) return stored;
+    const payload = (await res.json()) as { roles?: string[] };
+    if (!payload.roles?.length) return stored;
+    const next = { ...stored, erpnext: { ...erp, roles: payload.roles } };
+    saveStorage(next);
+    return next;
+  } catch {
+    return stored;
+  }
+}
+
 export function JunelStoreProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<JunelStorage | null>(null);
   const [ready, setReady] = useState(false);
@@ -34,7 +56,8 @@ export function JunelStoreProvider({ children }: { children: React.ReactNode }) 
     let cancelled = false;
 
     async function bootstrap() {
-      const stored = loadStorage();
+      let stored = loadStorage();
+      stored = await maybeRefreshErpRoles(stored);
       const templates = await fetchSkillTemplates();
       const merged = templates.length
         ? { ...stored, skills: mergeMissingTemplateSkills(stored.skills, templates) }

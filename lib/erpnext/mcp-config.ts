@@ -28,6 +28,7 @@ export type ErpnextSessionInput = {
   user: string;
   sid: string;
   csrfToken?: string;
+  roles?: string[];
 };
 
 export function isErpnextLoggedIn(data: JunelStorage) {
@@ -57,6 +58,7 @@ export function applyErpnextSession(
       user: session.user,
       sid: session.sid,
       linkedAt: Date.now(),
+      roles: session.roles?.length ? session.roles : undefined,
     } satisfies ErpnextLink,
     mcp: mergeErpnextMcp(prev.mcp, entry),
     profile: syncProfileFromErpLogin(prev.profile, session, prev.erpnext),

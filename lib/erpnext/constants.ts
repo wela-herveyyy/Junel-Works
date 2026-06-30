@@ -1,6 +1,8 @@
 export const DEFAULT_ERPNEXT_URL =
   process.env.NEXT_PUBLIC_ERPNEXT_URL?.trim() || "https://erp.livro.systems";
 
+export const LIVRO_ERP_HOST = "erp.livro.systems";
+
 /** Remote ERPNext MCP gateway — school URL is sent per client via `X-ERPNext-URL`. */
 export function erpnextMcpUrl() {
   return (

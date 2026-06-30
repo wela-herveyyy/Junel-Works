@@ -15,7 +15,7 @@ const fieldClass = "nb-input font-body-md min-h-[56px]";
 
 export function ProfileSetupConsole({ data, onSave }: ProfileSetupConsoleProps) {
   const suggested = suggestDisplayName(data.erpnext?.user, data.erpnext?.email || data.profile.email);
-  const [displayName, setDisplayName] = useState(data.profile.displayName.trim() || suggested);
+  const [displayName, setDisplayName] = useState(suggested);
   const [title, setTitle] = useState(data.profile.title);
   const [error, setError] = useState<string>();
 
@@ -41,6 +41,11 @@ export function ProfileSetupConsole({ data, onSave }: ProfileSetupConsoleProps) 
           <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
             Your name is saved in this browser and sent to the agent on every chat.
           </p>
+          {data.erpnext?.url ? (
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs break-all">
+              ERP site: <span className="text-secondary font-bold">{data.erpnext.url.replace(/\/$/, "")}</span>
+            </p>
+          ) : null}
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-md">

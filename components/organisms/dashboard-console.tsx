@@ -8,6 +8,7 @@ import { ChatSuggestions } from "@/components/molecules/chat-suggestions";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
+import { getErpBranding } from "@/lib/erpnext/branding";
 import { clearErpnextSession, isErpnextLoggedIn } from "@/lib/erpnext/mcp-config";
 import { loadStorage } from "@/lib/junel/storage/store";
 import { countActiveMcpServers, prepareAgentRequest } from "@/lib/junel/prepare-agent-request";
@@ -23,6 +24,7 @@ type DashboardSidebarProps = {
   ruleCount: number;
   skillCount: number;
   erpUser?: string;
+  sidebarHint: string;
 };
 
 const collapsedIconBtn =
@@ -47,7 +49,7 @@ function ContextStatIcon({
   );
 }
 
-function DashboardSidebar({ mcpCount, ruleCount, skillCount, erpUser }: DashboardSidebarProps) {
+function DashboardSidebar({ mcpCount, ruleCount, skillCount, erpUser, sidebarHint }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -163,14 +165,14 @@ function DashboardSidebar({ mcpCount, ruleCount, skillCount, erpUser }: Dashboar
 
       <div className="nb-card p-md nb-shadow-sm min-w-0 overflow-hidden">
         <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-          Junel streams replies live and can call your ERPNext MCP tools while you chat.
+          {sidebarHint}
         </p>
       </div>
     </aside>
   );
 }
 
-function ChatEmptyHero({ userName }: { userName?: string }) {
+function ChatEmptyHero({ userName, connectedMessage }: { userName?: string; connectedMessage: string }) {
   return (
     <div className="chat-hero-enter flex flex-col items-center text-center gap-md py-lg">
       <div className="relative w-20 h-20 rounded-full bg-primary-container nb-border nb-shadow-lg flex items-center justify-center chat-hero-icon">
@@ -184,7 +186,7 @@ function ChatEmptyHero({ userName }: { userName?: string }) {
           {userName ? `Hey ${userName.split("@")[0]}!` : "Hey there!"}
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-          ERPNext is connected. Ask about tasks, records, or anything on your site — Junel will use your live data.
+          {connectedMessage} Ask about tasks, records, or anything on your site — Junel will use your live data.
         </p>
       </div>
     </div>
@@ -327,6 +329,8 @@ export function DashboardConsole() {
   const activeMcp = countActiveMcpServers(data);
   const activeRules = data.rules.filter((rule) => rule.enabled).length;
   const activeSkills = data.skills.filter((skill) => skill.enabled).length;
+  const branding = getErpBranding(data.erpnext);
+  const sidebarHint = `Junel streams replies live and can call your ${branding.shortName} tools while you chat.`;
 
   return (
     <main className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
@@ -370,8 +374,8 @@ export function DashboardConsole() {
           <div className="mx-auto w-full max-w-3xl min-w-0 flex flex-col gap-lg">
             {messages.length === 0 ? (
               <>
-                <ChatEmptyHero userName={data.erpnext?.user} />
-                <ChatSuggestions onSelect={(text) => submitText(text)} disabled={isPending} />
+                <ChatEmptyHero userName={data.erpnext?.user} connectedMessage={branding.connectedMessage} />
+                <ChatSuggestions branding={branding} onSelect={(text) => submitText(text)} disabled={isPending} />
               </>
             ) : (
               messages.map((message, index) => {
@@ -409,7 +413,13 @@ export function DashboardConsole() {
           />
         </div>
       </section>
-      <DashboardSidebar mcpCount={activeMcp} ruleCount={activeRules} skillCount={activeSkills} erpUser={data.erpnext?.user} />
+      <DashboardSidebar
+        mcpCount={activeMcp}
+        ruleCount={activeRules}
+        skillCount={activeSkills}
+        erpUser={data.erpnext?.user}
+        sidebarHint={sidebarHint}
+      />
     </main>
   );
 }

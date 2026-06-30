@@ -6,7 +6,7 @@ import { ProfileSetupConsole } from "@/components/organisms/profile-setup-consol
 import { Icon } from "@/components/ui/icon";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import { isErpnextLoggedIn } from "@/lib/erpnext/mcp-config";
-import { hasProfileName, profileEmailFromErp } from "@/lib/junel/profile";
+import { bindProfileName, needsProfileSetup } from "@/lib/junel/profile";
 
 export function JunelAppGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -37,19 +37,16 @@ export function JunelAppGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!hasProfileName(data.profile)) {
+  if (needsProfileSetup(data)) {
     return (
       <ProfileSetupConsole
         data={data}
         onSave={(displayName, title) => {
           persist((prev) => ({
             ...prev,
-            profile: {
-              ...prev.profile,
-              displayName,
-              title: title || prev.profile.title,
-              email: profileEmailFromErp(prev.profile, prev.erpnext),
-            },
+            profile: prev.erpnext
+              ? bindProfileName(prev.profile, prev.erpnext, displayName, title)
+              : { ...prev.profile, displayName, title: title || prev.profile.title },
           }));
         }}
       />

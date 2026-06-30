@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { applyErpnextSession } from "@/lib/erpnext/mcp-config";
 import { DEFAULT_ERPNEXT_URL } from "@/lib/erpnext/constants";
+import { loadErpUrlHistory, normalizeErpUrlInput, pickInitialErpUrl, rememberErpUrl } from "@/lib/erpnext/url-history";
 import type { JunelStorage, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 type ErpnextLoginFormProps = {
@@ -22,6 +23,7 @@ type ApiResponse = {
   url?: string;
   sid?: string;
   csrfToken?: string;
+  roles?: string[];
   mcpEntry?: SdkMcpServerConfig;
   verificationRequired?: boolean;
   tmpId?: string;
@@ -31,7 +33,8 @@ type ApiResponse = {
 const fieldClass = "nb-input font-body-md";
 
 export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: ErpnextLoginFormProps) {
-  const [url, setUrl] = useState(erpUrl || DEFAULT_ERPNEXT_URL);
+  const [urlHistory, setUrlHistory] = useState<string[]>([]);
+  const [url, setUrl] = useState("");
   const [userEmail, setUserEmail] = useState(email || "");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -41,7 +44,16 @@ export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: E
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
+  useEffect(() => {
+    const history = loadErpUrlHistory();
+    setUrlHistory(history);
+    const initial = pickInitialErpUrl(erpUrl, history) || DEFAULT_ERPNEXT_URL;
+    setUrl(initial);
+  }, [erpUrl]);
+
   const awaitingOtp = Boolean(tmpId);
+  const normalizedUrl = normalizeErpUrlInput(url);
+  const historySelectValue = urlHistory.includes(normalizedUrl) ? normalizedUrl : "";
 
   function resetVerification() {
     setTmpId(undefined);
@@ -88,10 +100,12 @@ export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: E
             user: data.user,
             sid: data.sid,
             csrfToken: data.csrfToken,
+            roles: data.roles,
           },
           data.mcpEntry,
         ),
       );
+      setUrlHistory(rememberErpUrl(data.url));
       setPassword("");
       resetVerification();
     } catch (err) {

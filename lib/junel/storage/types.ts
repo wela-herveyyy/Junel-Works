@@ -6,6 +6,8 @@ export type UserProfile = {
   timezone: string;
   bio: string;
   avatarUrl: string;
+  /** `{erpUrl}|{email}` when displayName was last confirmed — stored in localStorage */
+  nameBoundTo?: string;
 };
 
 export type Contact = {
@@ -55,6 +57,8 @@ export type ErpnextLink = {
   user: string;
   sid: string;
   linkedAt: number;
+  /** Frappe roles — used for school SMS vs Livro branding */
+  roles?: string[];
 };
 
 export type JunelSettings = {
