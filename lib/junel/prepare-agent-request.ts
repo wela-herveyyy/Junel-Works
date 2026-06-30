@@ -6,7 +6,14 @@ export function prepareAgentRequest(data: JunelStorage, message: string) {
   return {
     message,
     agentId: data.chat.agentId,
-    systemContext: buildAgentContext(data.profile, data.contacts, data.rules, data.skills, data.settings),
+    systemContext: buildAgentContext(
+      data.profile,
+      data.contacts,
+      data.rules,
+      data.skills,
+      data.settings,
+      data.erpnext,
+    ),
     mcpServers: toSdkMcpServers(data.mcp),
   };
 }

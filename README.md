@@ -98,7 +98,8 @@ Create a `.env` file in the project root.
 | Variable | Required | Used by | Notes |
 | -------- | -------- | ------- | ----- |
 | `CURSOR_API_KEY` | **Yes** | `/api/agent`, `scripts/agent.mjs` | Without it the agent returns an error. |
-| `ERPNEXT_MCP_SERVER_PATH` | Recommended | ERP MCP entry | Absolute path to the built MCP server `index.js`. Defaults to `C:/Users/hmapa/Documents/PROJECTS/MCPs/erpnext-mcp-server/build/index.js`. |
+| `ERPNEXT_MCP_URL` | **Yes** (HTTP MCP) | Login + agent MCP | Public Streamable HTTP endpoint for the ERPNext MCP server (e.g. `https://mcp.yourdomain.com/mcp`). |
+| `NEXT_PUBLIC_ERPNEXT_MCP_URL` | No | Client migration | Browser-side fallback when `ERPNEXT_MCP_URL` is unset at build time. |
 | `NEXT_PUBLIC_ERPNEXT_URL` | No | Login form default | Pre-fills the ERP URL in the UI. Defaults to `https://erp.livro.systems`. |
 | `ERPNEXT_URL` | No | Server-side default | Fallback ERP URL on the server. |
 
@@ -114,7 +115,7 @@ Browser (localStorage state)
    ▼
 POST /api/agent  ──(SSE stream)──► streamAgentMessage()  ──► @cursor/sdk Agent
    │                                          │
-   │                                          └─► MCP servers (e.g. ERPNext) via stdio
+   │                                          └─► MCP servers (e.g. ERPNext) via HTTP
    ▼
 ChatMessage components render streamed text (Markdown)
 ```
@@ -159,18 +160,24 @@ Relevant files: `lib/erpnext/login.ts`, `lib/erpnext/mcp-config.ts`, `app/api/er
 MCP servers are stored as JSON (same shape as `~/.cursor/mcp.json`) in the Knowledge page editor. Two forms are accepted:
 
 ```jsonc
-// either a wrapper…
-{ "mcpServers": { "erpnext": { "command": "node", "args": ["…/index.js"], "env": { "ERPNEXT_URL": "…", "ERPNEXT_SID": "…" } } } }
-
-// …or a bare server map
-{ "erpnext": { "command": "node", "args": ["…/index.js"], "env": { … } } }
+// HTTP (created automatically at sign-in)
+{
+  "erpnext": {
+    "type": "http",
+    "url": "https://mcp.yourdomain.com/mcp",
+    "headers": {
+      "Authorization": "Bearer <ERPNEXT_SID>",
+      "X-ERPNext-URL": "https://erp.livro.systems"
+    }
+  }
+}
 ```
 
 - `lib/junel/mcp.ts` parses/normalizes JSON into the SDK shape (`stdio` with `command`/`args`/`env`, or `http`/`sse` with `url`/`headers`).
 - Only servers whose key is in `enabledKeys` are sent to the agent (`toSdkMcpServers`).
-- The **ERPNext** entry is created automatically at sign-in with the live `SID` injected inline (`buildErpnextMcpEntry`). You generally don't edit it by hand.
+- The **ERPNext** entry is created automatically at sign-in with the live `SID` and school URL in headers (`buildErpnextMcpEntry`). You generally don't edit it by hand.
 
-> **ERPNext MCP server** is a separate project. Build it and point `ERPNEXT_MCP_SERVER_PATH` at its `build/index.js`.
+> **ERPNext MCP server** is a separate project. Deploy it with `MCP_TRANSPORT=http` and point `ERPNEXT_MCP_URL` at its `/mcp` endpoint. The school ERP URL is **not** on the server — Junel sends `X-ERPNext-URL` per user session.
 
 ### Local storage
 
@@ -279,7 +286,7 @@ bun run agent -- "your prompt here"   # one-shot CLI agent (needs CURSOR_API_KEY
 | ------- | ----------- |
 | Agent replies "CURSOR_API_KEY is not configured" | Set `CURSOR_API_KEY` in `.env` and restart. |
 | Stuck on `/login` after signing in | The `erpnext` MCP server isn't enabled, or `sid` missing. Re-sign in; check the Knowledge MCP editor shows `erpnext` enabled. |
-| ERP MCP tools do nothing | `ERPNEXT_MCP_SERVER_PATH` is wrong or the MCP server isn't built. Verify the `build/index.js` path. |
+| ERP MCP tools do nothing | Check `ERPNEXT_MCP_URL`, sign in again (refresh SID), and confirm MCP JSON includes `X-ERPNext-URL` for your school. |
 | "no session cookie was returned" on login | The Frappe site didn't set the `sid` cookie — check the ERP URL and credentials. |
 | Layout looks oversized / cramped | Don't reuse Tailwind width tokens that collide with custom spacing (see gotchas). |
 | Single characters render vertically in chat | A `max-w-*` mapped to a tiny spacing token — use an explicit `max-w-[...]`. |

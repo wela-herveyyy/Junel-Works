@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { applyErpnextSession } from "@/lib/erpnext/mcp-config";
 import { DEFAULT_ERPNEXT_URL } from "@/lib/erpnext/constants";
-import { profileEmailFromErp } from "@/lib/junel/profile";
-import type { JunelMcpState, SdkMcpServerConfig } from "@/lib/junel/storage/types";
+import type { JunelStorage, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 type ErpnextLoginFormProps = {
   erpUrl?: string;
   email?: string;
-  mcp: JunelMcpState;
+  store: Pick<JunelStorage, "mcp" | "profile" | "erpnext">;
   onSuccess: (patch: ReturnType<typeof applyErpnextSession>) => void;
   compact?: boolean;
 };
@@ -31,7 +30,7 @@ type ApiResponse = {
 
 const fieldClass = "nb-input font-body-md";
 
-export function ErpnextLoginForm({ erpUrl, email, mcp, onSuccess, compact }: ErpnextLoginFormProps) {
+export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: ErpnextLoginFormProps) {
   const [url, setUrl] = useState(erpUrl || DEFAULT_ERPNEXT_URL);
   const [userEmail, setUserEmail] = useState(email || "");
   const [password, setPassword] = useState("");
@@ -82,7 +81,7 @@ export function ErpnextLoginForm({ erpUrl, email, mcp, onSuccess, compact }: Erp
 
       onSuccess(
         applyErpnextSession(
-          mcp,
+          store,
           {
             url: data.url,
             email: userEmail,

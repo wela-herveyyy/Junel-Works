@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseSkillMd } from "./parse-skill-md";
 
-const JUNEL_MCP_NOTE = `> **Junel:** MCP server key is \`erpnext\` (remote HTTP + Bearer SID from ERP sign-in). Use \`get_user_profile\` via MCP — no local \`npm run\` auth scripts.`;
+const JUNEL_MCP_NOTE = `> **Junel:** MCP server key is \`erpnext\` (remote HTTP + Bearer SID + \`X-ERPNext-URL\` from ERP sign-in). Use \`get_user_profile\` via MCP — no local \`npm run\` auth scripts. Never hardcode \`erp.livro.systems\`; use the signed-in Site from agent context for links.`;
 
 function readMarkdownFiles(dir: string, exclude = new Set(["SKILL.md"])) {
   try {

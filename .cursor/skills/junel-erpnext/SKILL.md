@@ -3,20 +3,22 @@ name: junel-erpnext
 description: >
   Query and act on ERPNext / Frappe data through Junel's remote HTTP MCP server.
   Use when the user asks about DocTypes, records, tasks, leave, customers, or
-  anything on their ERP site. The MCP server already has ERPNEXT_URL configured;
-  authenticate with the user's session SID as Bearer token.
+  anything on their ERP site. Junel sends the school ERP URL and session SID on
+  each MCP request.
 ---
 
 # Junel ERPNext MCP
 
-Junel connects to ERPNext through a **remote HTTP MCP server**. The ERP site URL
-(for example `erp.livro.systems`) is configured in the MCP server's environment —
-do not ask the user for it unless auth fails.
+Junel connects to ERPNext through a **remote HTTP MCP server**. Each school has its
+own ERPNext instance — Junel passes the signed-in site URL on every MCP call.
 
 ## Auth model
 
-- MCP config shape: HTTP URL + `Authorization: Bearer <ERPNEXT_SID>`
-- The SID comes from the user's Frappe login session
+- MCP config shape: HTTP URL + headers:
+  - `Authorization: Bearer <ERPNEXT_SID>`
+  - `X-ERPNext-URL: <school ERP base URL>` — from the user's Junel sign-in (shown in agent context as **Site**)
+- The SID and school URL come from the user's Frappe login session
+- **All ERP desk links** must use the Site URL from agent context — never assume `erp.livro.systems`
 - If tools fail with auth errors, tell the user to sign out and sign in again
 
 ## How to work

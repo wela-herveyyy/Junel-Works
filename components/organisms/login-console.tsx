@@ -6,7 +6,7 @@ import { ErpnextLoginForm } from "@/components/molecules/erpnext-login-form";
 import { Icon } from "@/components/ui/icon";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import { isErpnextLoggedIn } from "@/lib/erpnext/mcp-config";
-import { hasProfileName, profileEmailFromErp } from "@/lib/junel/profile";
+import { hasProfileName } from "@/lib/junel/profile";
 
 export function LoginConsole() {
   const router = useRouter();
@@ -41,16 +41,9 @@ export function LoginConsole() {
         compact
         erpUrl={data.erpnext?.url}
         email={data.erpnext?.email}
-        mcp={data.mcp}
+        store={{ mcp: data.mcp, profile: data.profile, erpnext: data.erpnext }}
         onSuccess={(patch) => {
-          persist((prev) => ({
-            ...prev,
-            ...patch,
-            profile: {
-              ...prev.profile,
-              email: profileEmailFromErp(prev.profile, patch.erpnext),
-            },
-          }));
+          persist((prev) => ({ ...prev, ...patch }));
           router.replace("/");
         }}
       />

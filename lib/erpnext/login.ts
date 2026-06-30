@@ -160,11 +160,16 @@ export async function verifyErpnextOtp(url: string, tmpId: string, otp: string):
   return finishSession(baseUrl, result.cookies);
 }
 
-/** HTTP MCP entry — SID as Bearer token; ERP site URL lives on the MCP server env. */
-export function buildErpnextMcpEntry(session: { sid: string }): SdkMcpServerConfig {
+/** HTTP MCP entry — SID as Bearer token; school ERP URL in `X-ERPNext-URL`. */
+export function buildErpnextMcpEntry(session: { sid: string; url: string }): SdkMcpServerConfig {
   const url = erpnextMcpUrl();
   if (!url) {
     throw new Error("ERPNEXT_MCP_URL is not configured");
+  }
+
+  const erpUrl = normalizeUrl(session.url);
+  if (!erpUrl) {
+    throw new Error("ERP URL is required for MCP configuration");
   }
 
   return {
@@ -172,6 +177,7 @@ export function buildErpnextMcpEntry(session: { sid: string }): SdkMcpServerConf
     url,
     headers: {
       Authorization: `Bearer ${session.sid}`,
+      "X-ERPNext-URL": erpUrl,
     },
   };
 }

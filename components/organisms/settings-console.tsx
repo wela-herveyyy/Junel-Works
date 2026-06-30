@@ -9,6 +9,7 @@ import { PersonalityCard } from "@/components/molecules/personality-card";
 import { Switch } from "@/components/ui/switch";
 import { useJunelStore } from "@/components/providers/junel-store-provider";
 import { PERSONALITIES } from "@/lib/junel/constants";
+import { profileEmailFromErp, syncProfileFromErpLogin } from "@/lib/junel/profile";
 import type { Contact, UserProfile } from "@/lib/junel/storage/types";
 
 const fieldClass = "nb-input font-body-md min-h-[56px]";
@@ -19,20 +20,20 @@ export function SettingsConsole() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact>();
 
-  const erpEmail = data?.erpnext?.email;
-  const profileEmail = data?.profile.email;
-
   useEffect(() => {
-    if (ready && erpEmail && !profileEmail) {
-      persist((prev) => ({ ...prev, profile: { ...prev.profile, email: prev.erpnext?.email ?? prev.profile.email } }));
+    if (!ready || !data?.erpnext) return;
+    const synced = syncProfileFromErpLogin(data.profile, data.erpnext);
+    if (synced.email !== data.profile.email || synced.company !== data.profile.company) {
+      persist((prev) => ({ ...prev, profile: synced }));
     }
-  }, [ready, erpEmail, profileEmail, persist]);
+  }, [ready, data, persist]);
 
   if (!ready || !data) {
     return <main className="flex-1 min-h-0 w-full overflow-y-auto custom-scrollbar p-lg text-on-surface-variant">Loading...</main>;
   }
 
-  const { profile, contacts, settings } = data;
+  const { profile, contacts, settings, erpnext } = data;
+  const erpEmail = profileEmailFromErp(profile, erpnext);
   const nameMissing = !profile.displayName.trim();
 
   function updateProfile(patch: Partial<UserProfile>) {
@@ -106,7 +107,7 @@ export function SettingsConsole() {
               </span>
               <input
                 type="email"
-                value={profile.email}
+                value={erpEmail || profile.email}
                 readOnly
                 title="Synced from your ERPNext login"
                 className={`${fieldClass} bg-surface-container text-on-surface-variant cursor-not-allowed`}

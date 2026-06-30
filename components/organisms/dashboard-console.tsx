@@ -392,7 +392,7 @@ export function DashboardConsole() {
             {error ? (
               <div className="chat-message-enter-assistant font-body-sm text-body-sm text-on-error-container bg-error-container nb-border rounded-xl px-md py-sm nb-shadow-sm flex items-start gap-sm min-w-0 max-w-full">
                 <Icon name="error" size={18} className="shrink-0 mt-0.5" />
-                <span className="min-w-0 break-words">{error}</span>
+                <span className="min-w-0 wrap-break-word">{error}</span>
               </div>
             ) : null}
             <div ref={bottomRef} aria-hidden className="h-2 shrink-0" />

@@ -1,4 +1,32 @@
-import type { Contact, JunelRule, JunelSettings, JunelSkill, UserProfile } from "@/lib/junel/storage/types";
+import type { Contact, ErpnextLink, JunelRule, JunelSettings, JunelSkill, UserProfile } from "@/lib/junel/storage/types";
+
+const LEGACY_ERP_HOST = "erp.livro.systems";
+
+function normalizeErpBase(url: string) {
+  return url.trim().replace(/\/$/, "");
+}
+
+/** Replace Livro example URLs baked into skill templates with the signed-in site. */
+export function adaptSkillContentForErp(content: string, erpBaseUrl?: string) {
+  if (!erpBaseUrl?.trim()) return content;
+  const base = normalizeErpBase(erpBaseUrl);
+  const host = base.replace(/^https?:\/\//i, "");
+  return content
+    .replace(/https:\/\/erp\.livro\.systems/gi, base)
+    .replace(/\berp\.livro\.systems\b/gi, host);
+}
+
+function erpSessionContext(erpnext?: ErpnextLink) {
+  if (!erpnext?.url?.trim()) return undefined;
+  const base = normalizeErpBase(erpnext.url);
+  return [
+    "ERPNext session (authoritative — use for all MCP calls and every ERP link you output):",
+    `- Site: ${base}`,
+    `- Logged-in user: ${erpnext.user}`,
+    `- Desk link pattern: ${base}/app/{doctype-slug}/{document-name}`,
+    `Do not use ${LEGACY_ERP_HOST} or any other host unless it exactly matches Site above.`,
+  ].join("\n");
+}
 
 const PERSONALITY_HINTS: Record<string, string> = {
   professional: "Formal, structured, precise — no fluff.",
@@ -40,8 +68,12 @@ export function buildAgentContext(
   rules: JunelRule[],
   skills: JunelSkill[],
   settings: JunelSettings,
+  erpnext?: ErpnextLink,
 ) {
   const parts: string[] = [];
+
+  const erpLine = erpSessionContext(erpnext);
+  if (erpLine) parts.push(erpLine);
 
   const profileLine = profileContext(profile);
   if (profileLine) parts.push(profileLine);
@@ -62,7 +94,8 @@ export function buildAgentContext(
     parts.push("These Cursor-style skills are enabled — follow their instructions:");
     for (const skill of enabledSkills) {
       if (skill.content?.trim()) {
-        parts.push(`### Skill: ${skill.name}\n${skill.description}\n\n${skill.content.trim()}`);
+        const content = adaptSkillContentForErp(skill.content.trim(), erpnext?.url);
+        parts.push(`### Skill: ${skill.name}\n${skill.description}\n\n${content}`);
       } else {
         parts.push(`- ${skill.name}: ${skill.description}`);
       }
