@@ -3,9 +3,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { ErpUrlHistoryPicker } from "@/components/molecules/erp-url-history-picker";
 import { applyErpnextSession } from "@/lib/erpnext/mcp-config";
 import { DEFAULT_ERPNEXT_URL } from "@/lib/erpnext/constants";
-import { loadErpUrlHistory, normalizeErpUrlInput, pickInitialErpUrl, rememberErpUrl } from "@/lib/erpnext/url-history";
+import { loadErpUrlHistory, pickInitialErpUrl, rememberErpUrl } from "@/lib/erpnext/url-history";
 import type { JunelStorage, SdkMcpServerConfig } from "@/lib/junel/storage/types";
 
 type ErpnextLoginFormProps = {
@@ -52,8 +53,6 @@ export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: E
   }, [erpUrl]);
 
   const awaitingOtp = Boolean(tmpId);
-  const normalizedUrl = normalizeErpUrlInput(url);
-  const historySelectValue = urlHistory.includes(normalizedUrl) ? normalizedUrl : "";
 
   function resetVerification() {
     setTmpId(undefined);
@@ -146,40 +145,7 @@ export function ErpnextLoginForm({ erpUrl, email, store, onSuccess, compact }: E
         <>
           <label className="flex w-full min-w-0 flex-col gap-xs font-body-sm text-on-surface-variant">
             ERP URL
-            {urlHistory.length > 0 ? (
-              <select
-                value={historySelectValue}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (next) setUrl(next);
-                }}
-                className={fieldClass}
-                aria-label="Recent ERP sites"
-              >
-                <option value="">Recent sites — pick one or type below</option>
-                {urlHistory.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            ) : null}
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className={fieldClass}
-              placeholder="https://erp.example.com"
-              list={urlHistory.length ? "junel-erp-url-list" : undefined}
-              required
-            />
-            {urlHistory.length ? (
-              <datalist id="junel-erp-url-list">
-                {urlHistory.map((item) => (
-                  <option key={item} value={item} />
-                ))}
-              </datalist>
-            ) : null}
+            <ErpUrlHistoryPicker value={url} onChange={setUrl} history={urlHistory} required />
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-xs font-body-sm text-on-surface-variant">
