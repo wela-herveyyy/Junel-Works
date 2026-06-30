@@ -105,9 +105,11 @@ Students reach Class List **via section**, not by adding them on the class form.
 
 Verify with `get_documents` filtering `Sectioning` by enrollee.
 
-### 5. Class List (teacher → subject class)
+**Submit Sectioning** (`submit_document`) so student Silid queries see `docstatus == 1`.
 
-Per [Silid V3 class setup](https://erp.livro.systems/app/livro-elibrary/tdishn5bug):
+### 5. Class + Class Schedule (Silid BED path)
+
+Silid **`get_classes`** reads **Class Schedule** child rows — see `erpnext-silid-get-classes`.
 
 ```json
 {
@@ -117,20 +119,24 @@ Per [Silid V3 class setup](https://erp.livro.systems/app/livro-elibrary/tdishn5b
     "school_year": "<active_school_year>",
     "section": "<section_name>",
     "level": "<level>",
-    "subject": "<subject_name>",
-    "teacher": "<teacher_name>"
+    "class_schedule": [
+      {
+        "subject": "<Subject.name>",
+        "teacher": "<Teacher.name>",
+        "schedule": "8:00 AM - 9:00 AM",
+        "period": "1",
+        "day": "Monday"
+      }
+    ]
   }
 }
 ```
 
-Field names may differ (child table for subjects) — **always** follow `get_doctype_schema` for the Site.
-
-Optional:
-
-- Set **`teacher`** on homeroom/adviser field if separate from subject teacher.
-- Add **Class Schedule** child rows (subject, teacher, day, period, schedule) — see [payloads.md](payloads.md).
+Child table key from `get_doctype_schema`.
 
 ### 6. Validate
+
+**Silid API** — `call_method` `get_classes` for teacher and student emails ([api.md](../erpnext-silid-get-classes/api.md)).
 
 **MCP read-back:**
 
@@ -174,8 +180,8 @@ After run, reply with:
 
 | Symptom | Check |
 | ------- | ----- |
-| Student not in Silid | Sectioning saved? Same school year as Class? |
-| Teacher not in Silid | Teacher List exists? Class List has subject + teacher? |
+| Student not in Silid | Sectioning **submitted** (docstatus 1)? Class Schedule rows? |
+| Teacher not in Silid | Class Schedule.teacher → Teacher.user = email? |
 | Empty Class List | Subject field on Class vs child table — read schema |
 | PermissionError | User needs Registrar / System Manager on school site |
 | Wrong site data | Junel `X-ERPNext-URL` must be the QA school, not Livro central |
@@ -185,3 +191,4 @@ After run, reply with:
 - Payload templates: [payloads.md](payloads.md)
 - Verification script: [checklist.md](checklist.md)
 - Process docs: skill `erpnext-livro-wela-class` / [elibrary.md](../erpnext-livro-wela-class/elibrary.md)
+- Fetch classes API: skill `erpnext-silid-get-classes`

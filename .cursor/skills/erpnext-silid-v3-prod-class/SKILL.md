@@ -12,6 +12,7 @@ description: >-
 **Goal:** On a **live school ERP site**, correctly link **real teachers** and **real students** to classes so they appear in **Silid LMS** — following Wela BED enrollment order and registrar controls.
 
 - **Process reference:** skill `erpnext-livro-wela-class`
+- **Fetch / verify Silid classes:** skill `erpnext-silid-get-classes`
 - **Demo/test sites only:** skill `erpnext-silid-v3-qa-class` — **never** use QA skill on production.
 
 ## Hard rules
@@ -61,8 +62,9 @@ Production class assignment:
 - [ ] 2. Student path — Enrollee ready (+ billing if required)
 - [ ] 3. Sectioning — enrollee → section (individual or batch)
 - [ ] 4. Teacher path — Teacher List ready
-- [ ] 5. Class List — subject + teacher (+ schedule if needed)
-- [ ] 6. Validate — read-back + user comms (portal/SMS)
+- [ ] 5. Class — **Class Schedule** (BED) or **Specialized Subjects Child** (SHS) + teacher links
+- [ ] 6. Silid verify — `submit_document` Sectioning + `get_classes` API
+- [ ] 7. Handoff — portal/SMS comms
 ```
 
 ### 0. Production gate
@@ -119,6 +121,8 @@ Students join classes **through sectioning**, not by editing Class List roster d
 
 **Idempotent:** query existing Sectioning for `(enrollee, school_year)` — update section only if user asks to move.
 
+**Silid requirement:** **`submit_document` on Sectioning** after save — student `get_classes` queries require `Sectioning.docstatus == 1` (see skill `erpnext-silid-get-classes`).
+
 Payload patterns: [payloads.md](payloads.md).
 
 ### 4. Teacher path (production)
@@ -129,18 +133,26 @@ Payload patterns: [payloads.md](payloads.md).
 
 Teachers are **not** assigned via sectioning.
 
-### 5. Class List (teacher → Silid subject class)
+### 5. Class + schedule (what Silid actually queries)
 
-Per [tdishn5bug](https://erp.livro.systems/app/livro-elibrary/tdishn5bug):
+Silid **`get_classes`** joins **Class Schedule** (BED) or **Specialized Subjects Child** (SHS) — not desk Class List labels alone.
 
-- Open existing **Class** for `{school_year} @ {section}` or create with title, school year, section, level.
-- Assign **teacher per subject** (top-level fields or child table per schema).
-- Optional: **Class Schedule** rows ([kjgse4fu2l](https://erp.livro.systems/app/livro-elibrary/kjgse4fu2l)).
-- Optional: homeroom **adviser** on `Class.teacher` if separate from subject teacher.
+Per [tdishn5bug](https://erp.livro.systems/app/livro-elibrary/tdishn5bug) + [assignment-rules in erpnext-silid-get-classes](../erpnext-silid-get-classes/assignment-rules.md):
+
+- **Class** for `{school_year} @ {section}` — school year, section, level.
+- **BED:** **Class Schedule** child rows: `subject`, `teacher` (= Teacher.name), schedule fields.
+- **SHS:** **Specialized Subjects Child** on Class: `specialized_subject`, `teacher`.
+- **College:** **College Classes** + **College Faculty**.adviser — separate path.
 
 Use `update_document` when class exists; `create_document` only when confirmed.
 
 ### 6. Validate & handoff
+
+**Silid API (required):**
+
+1. `call_method` **`get_classes`** for student email, `role: "student"` — expect rows.
+2. `call_method` **`get_classes`** for teacher email, `role: "teacher"` — expect rows.
+3. If empty → skill **`erpnext-silid-get-classes`** diagnosis checklist.
 
 **MCP read-back:**
 
@@ -182,8 +194,9 @@ See [checklist.md](checklist.md).
 
 | Symptom | Production check |
 | ------- | ---------------- |
-| Student not in Silid | Sectioning saved? Year matches Class? Silid Setup? |
-| Teacher not in Silid | Class List has subject + teacher row? Teacher List exists? |
+| Student not in Silid | Sectioning **submitted**? Class Schedule + year match? |
+| Teacher not in Silid | Class Schedule.teacher link? Teacher.user = email? |
+| Empty get_classes | Skill `erpnext-silid-get-classes` assignment-rules |
 | Cannot section | Billing/matriculation incomplete? Wrong school year in settings? |
 | Duplicate enrollee | Search by name + year before create; use continuing-student link |
 | Wrong school | Junel Site URL must be the live school site |
@@ -194,3 +207,4 @@ See [checklist.md](checklist.md).
 - MCP payloads: [payloads.md](payloads.md)
 - Post-run checks: [checklist.md](checklist.md)
 - eLibrary index: [../erpnext-livro-wela-class/elibrary.md](../erpnext-livro-wela-class/elibrary.md)
+- Silid fetch API: [../erpnext-silid-get-classes/SKILL.md](../erpnext-silid-get-classes/SKILL.md)

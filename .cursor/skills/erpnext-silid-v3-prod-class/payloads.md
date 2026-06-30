@@ -133,9 +133,35 @@ Add site-specific roles from a sample teacher User (`get_document` on existing T
 }
 ```
 
-## Update class — assign subject + teacher
+## Submit sectioning (required for Silid student list)
 
-Schema may use top-level fields or child table. Example top-level:
+After Sectioning is complete:
+
+Use MCP `submit_document` with `doctype: Sectioning`, `name: <sectioning_name>`. Student BED/SHS `get_classes` requires `docstatus == 1`.
+
+## Update class — Class Schedule (BED — Silid join table)
+
+**Primary path for Silid** — not optional. Confirm child table field name via schema (`class_schedule` typical):
+
+```json
+{
+  "doctype": "Class",
+  "name": "<class_name>",
+  "data": {
+    "class_schedule": [
+      {
+        "subject": "<Subject.name>",
+        "teacher": "<Teacher.name>",
+        "schedule": "8:00 AM - 9:00 AM",
+        "period": "1",
+        "day": "Monday"
+      }
+    ]
+  }
+}
+```
+
+Legacy top-level fields (may not appear in Silid API):
 
 ```json
 {
@@ -148,26 +174,9 @@ Schema may use top-level fields or child table. Example top-level:
 }
 ```
 
-Example child table (confirm table name from schema):
-
-```json
-{
-  "doctype": "Class",
-  "name": "<class_name>",
-  "data": {
-    "subjects": [
-      {
-        "subject": "<subject_name>",
-        "teacher": "<teacher_document_name>"
-      }
-    ]
-  }
-}
-```
+SHS: update **Specialized Subjects Child** on Class instead — see `erpnext-silid-get-classes/assignment-rules.md`.
 
 Use `verbose: true` on first production write per DocType to verify structure.
-
-## Create enrollee (manual — real data only)
 
 All values from user/registrar — no placeholders:
 
@@ -189,24 +198,13 @@ All values from user/registrar — no placeholders:
 
 Include every mandatory field from schema sample.
 
-## Class schedule row (optional)
+## Verify with get_classes
 
 ```json
 {
-  "doctype": "Class",
-  "name": "<class_name>",
-  "data": {
-    "class_schedule": [
-      {
-        "schedule": "8:00 AM - 9:00 AM",
-        "period": "1",
-        "subject": "<subject>",
-        "teacher": "<teacher_name>",
-        "day": "Monday"
-      }
-    ]
-  }
+  "method": "silid_lms.api.class.get_classes",
+  "args": { "email": "<user_email>", "role": "student" }
 }
 ```
 
-Table field name from schema.
+See `erpnext-silid-get-classes/api.md` for method path discovery.

@@ -28,15 +28,34 @@ export function isLivroErpUrl(url?: string) {
   }
 }
 
+/** Wela / SMS Frappe role names (exact, case-insensitive). */
+const WELA_STUDENT_ROLES = new Set(["Student k12", "Student"]);
+const WELA_TEACHER_ROLES = new Set(["College Teacher", "Faculty", "College Faculty"]);
+
+/** Loose fallback for sites that use other role naming. */
 const STUDENT_ROLE = /\b(student|pupil|learner)\b/i;
 const TEACHER_ROLE = /\b(teacher|instructor|faculty|educator|professor)\b/i;
 
+function normalizeRoleName(role: string) {
+  return role.trim().toLowerCase();
+}
+
+/** Map Frappe User roles → Junel/Silid `student` | `teacher`. Student wins if both match. */
 export function classifySchoolRole(roles: string[] | undefined): SchoolRole | undefined {
   if (!roles?.length) return undefined;
-  const normalized = roles.map((role) => role.trim()).filter(Boolean);
+  const normalized = roles.map(normalizeRoleName).filter(Boolean);
+
+  if (normalized.some((role) => WELA_STUDENT_ROLES.has(role))) return "student";
+  if (normalized.some((role) => WELA_TEACHER_ROLES.has(role))) return "teacher";
+
   if (normalized.some((role) => STUDENT_ROLE.test(role))) return "student";
   if (normalized.some((role) => TEACHER_ROLE.test(role))) return "teacher";
   return undefined;
+}
+
+/** Same as classifySchoolRole — Silid `get_classes` expects `role: "student" | "teacher"`. */
+export function silidClassesRole(roles: string[] | undefined): SchoolRole | undefined {
+  return classifySchoolRole(roles);
 }
 
 const LIVRO_BRANDING: ErpBranding = {

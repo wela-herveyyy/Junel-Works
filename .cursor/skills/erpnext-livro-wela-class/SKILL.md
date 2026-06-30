@@ -117,3 +117,4 @@ See [elibrary.md](elibrary.md) for IDs, titles, and deep links.
 | ----- | --- |
 | `erpnext-silid-v3-prod-class` | Live school — real enrollees, sectioning, Class List via MCP |
 | `erpnext-silid-v3-qa-class` | QA/demo sites only — fake `qa-*` test data |
+| `erpnext-silid-get-classes` | Fetch classes via `get_classes` API; debug empty Silid lists |
