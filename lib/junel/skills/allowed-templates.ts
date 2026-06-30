@@ -2,6 +2,9 @@
 export const ALLOWED_SKILL_TEMPLATES = new Set([
   "junel-erpnext",
   "erpnext-livro-task",
+  "erpnext-livro-wela-class",
+  "erpnext-silid-v3-qa-class",
+  "erpnext-silid-v3-prod-class",
   "erpnext-leave-application",
   "erpnext-document-comment",
 ]);
